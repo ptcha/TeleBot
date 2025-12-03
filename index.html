@@ -87,39 +87,41 @@
                 let responseMessage = '';
                 let googleSheetsSuccess = false;
                 
-                // Send data to Google Apps Script regardless of placeholder
-                // This will attempt to send data and handle errors appropriately
-                try {
-                    // Send data to Google Apps Script
-                    const response = await fetch(scriptUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            firstName: firstName,
-                            lastName: lastName,
-                            email: email
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        const responseData = await response.json();
+                // Check if we have a real script URL (not the placeholder)
+                if (!scriptUrl.includes('YOUR_SCRIPT_ID')) {
+                    // Send data to Google Apps Script only if we have a real URL
+                    try {
+                        // Send data to Google Apps Script
+                        const response = await fetch(scriptUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                firstName: firstName,
+                                lastName: lastName,
+                                email: email
+                            })
+                        });
                         
-                        if (responseData.result === 'success') {
-                            responseSuccess = true;
-                            googleSheetsSuccess = true;
-                            responseMessage = responseData.message || 'Data saved successfully';
+                        if (response.ok) {
+                            const responseData = await response.json();
+                            
+                            if (responseData.result === 'success') {
+                                responseSuccess = true;
+                                googleSheetsSuccess = true;
+                                responseMessage = responseData.message || 'Data saved successfully';
+                            } else {
+                                throw new Error(responseData.message || 'Server error');
+                            }
                         } else {
-                            throw new Error(responseData.message || 'Server error');
+                            // If response is not ok, treat as error but continue
+                            throw new Error(`HTTP error! status: ${response.status}`);
                         }
-                    } else {
-                        // If response is not ok, treat as error but continue
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    } catch (fetchError) {
+                        console.error('Error sending to Google Sheets:', fetchError);
+                        // Continue execution, data will be stored locally
                     }
-                } catch (fetchError) {
-                    console.error('Error sending to Google Sheets:', fetchError);
-                    // Continue execution, data will be stored locally
                 }
                 
                 // Store data in localStorage as backup regardless of Google Sheets success
