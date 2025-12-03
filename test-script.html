@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Google Apps Script</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест Google Apps Script</h1>
+    
+    <p>Используйте эту страницу для тестирования вашего Google Apps Script перед использованием формы регистрации.</p>
+    
+    <form id="testForm">
+        <div class="form-group">
+            <label for="scriptId">ID скрипта:</label>
+            <input 
+                type="text" 
+                id="scriptId" 
+                placeholder="Введите ID вашего скрипта (например: abc123...)"
+                required
+            >
+            <small>Это часть URL между 'https://script.google.com/macros/s/' и '/exec'</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="firstName">Имя:</label>
+            <input 
+                type="text" 
+                id="firstName" 
+                placeholder="Иван"
+                required
+            >
+        </div>
+        
+        <div class="form-group">
+            <label for="lastName">Фамилия:</label>
+            <input 
+                type="text" 
+                id="lastName" 
+                placeholder="Иванов"
+                required
+            >
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input 
+                type="email" 
+                id="email" 
+                placeholder="example@domain.com"
+                required
+            >
+        </div>
+        
+        <button type="submit">Отправить тестовый запрос</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const scriptId = document.getElementById('scriptId').value.trim();
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            const resultDiv = document.getElementById('result');
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            // Validate inputs
+            if (!scriptId || !firstName || !lastName || !email) {
+                resultDiv.innerHTML = '<div class="error">Пожалуйста, заполните все поля.</div>';
+                return;
+            }
+            
+            // Show loading state
+            submitButton.textContent = 'Отправляем...';
+            submitButton.disabled = true;
+            resultDiv.innerHTML = '<div class="result">Отправка данных...</div>';
+            
+            try {
+                const response = await fetch(`https://script.google.com/macros/s/${scriptId}/exec`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        firstName: firstName,
+                        lastName: lastName,
+                        email: email
+                    })
+                });
+                
+                const responseData = await response.json();
+                
+                if (response.ok && responseData.result === 'success') {
+                    resultDiv.innerHTML = '<div class="success">✓ Успешно! Данные были отправлены в Google Таблицу.</div>';
+                } else {
+                    resultDiv.innerHTML = `<div class="error">✗ Ошибка: ${responseData.message || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error details:', error);
+                resultDiv.innerHTML = `<div class="error">✗ Ошибка подключения: ${error.message}</div>`;
+            } finally {
+                // Reset button state
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
