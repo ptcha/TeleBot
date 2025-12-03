@@ -80,14 +80,15 @@
             
             try {
                 // Attempt to send data to Google Apps Script web app
-                // This URL should be replaced with your actual deployed Google Apps Script URL
+                // Replace 'YOUR_SCRIPT_ID' with your actual deployed Google Apps Script ID
                 const scriptUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+                
+                let responseSuccess = false;
+                let responseMessage = '';
+                let googleSheetsSuccess = false;
                 
                 // Only attempt to send to Google Apps Script if we have a real script ID
                 // (not the placeholder 'YOUR_SCRIPT_ID')
-                let responseSuccess = false;
-                let responseMessage = '';
-                
                 if (!scriptUrl.includes('YOUR_SCRIPT_ID')) {
                     // Send data to Google Apps Script
                     const response = await fetch(scriptUrl, {
@@ -106,40 +107,39 @@
                     
                     if (response.ok && responseData.result === 'success') {
                         responseSuccess = true;
+                        googleSheetsSuccess = true;
                         responseMessage = responseData.message || 'Data saved successfully';
                     } else {
                         throw new Error(responseData.message || 'Server error');
                     }
-                } else {
-                    // If using placeholder URL, skip the network request but simulate success
-                    // This avoids the "Failed to fetch" error when using the placeholder
-                    responseSuccess = true;
-                    responseMessage = 'Data saved successfully (demo mode)';
                 }
                 
-                if (responseSuccess) {
-                    // Store data in localStorage as backup
-                    const registrationData = {
-                        firstName: firstName,
-                        lastName: lastName,
-                        email: email,
-                        timestamp: new Date().toISOString(),
-                        status: 'registered'
-                    };
-                    
-                    let registrations = JSON.parse(localStorage.getItem('registrations')) || [];
-                    registrations.push(registrationData);
-                    localStorage.setItem('registrations', JSON.stringify(registrations));
-                    
-                    alert('Регистрация прошла успешно! Мы отправили вам письмо с подтверждением.');
-                    this.reset();
+                // Store data in localStorage as backup regardless of Google Sheets success
+                const registrationData = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    timestamp: new Date().toISOString(),
+                    status: googleSheetsSuccess ? 'registered' : 'pending_google_sheets'
+                };
+                
+                let registrations = JSON.parse(localStorage.getItem('registrations')) || [];
+                registrations.push(registrationData);
+                localStorage.setItem('registrations', JSON.stringify(registrations));
+                
+                // If Google Sheets integration is not configured (placeholder URL), 
+                // inform user that data is saved locally
+                if (scriptUrl.includes('YOUR_SCRIPT_ID')) {
+                    alert('Данные сохранены локально. Для отправки в Google Таблицу необходимо настроить Google Apps Script.');
                 } else {
-                    throw new Error(responseMessage);
+                    alert('Регистрация прошла успешно! Мы отправили вам письмо с подтверждением.');
                 }
+                
+                this.reset();
             } catch (error) {
                 console.error('Error details:', error);
                 
-                // Even if the network request fails, save data locally as backup
+                // Save data locally even if Google Sheets request fails
                 const registrationData = {
                     firstName: firstName,
                     lastName: lastName,
@@ -154,7 +154,7 @@
                 localStorage.setItem('registrations', JSON.stringify(registrations));
                 
                 // Show user-friendly message without technical details
-                alert('Регистрация прошла успешно! Мы отправили вам письмо с подтверждением. (Данные сохранены локально)');
+                alert('Произошла ошибка при отправке данных в Google Таблицу, но данные сохранены локально.');
                 this.reset();
             } finally {
                 // Reset button state
