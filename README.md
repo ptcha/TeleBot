@@ -16,6 +16,8 @@ The registration form on the website has been updated to connect directly to a G
 - Added JavaScript to handle form submission and send data to Google Sheets
 - Created a setup guide for Google Apps Script integration
 - Fixed "Failed to fetch" error when submitting data by implementing proper error handling and local fallback storage
+- Enhanced Google Apps Script code to handle both JSON and form data, with automatic sheet creation if it doesn't exist
+- Updated form submission logic to always attempt sending data to Google Apps Script, with proper error handling
 
 ### Data Flow:
 1. User fills out the registration form (name, surname, email)
@@ -35,6 +37,7 @@ To complete the integration, you need to:
 2. Update the script URL in the HTML file with your deployed script ID
 3. Test the integration using the test script provided in `test-script.html`
 4. See `PROBLEM_SOLUTION.md` for detailed information about fixing the "Failed to fetch" error
+5. For detailed deployment instructions, see `DEPLOYMENT_INSTRUCTIONS.md`
 
 ### Testing the Integration:
 Before using the registration form, use the test script (`test-script.html`) to verify that your Google Apps Script is properly configured and can successfully write data to your Google Sheet.
@@ -43,10 +46,11 @@ Before using the registration form, use the test script (`test-script.html`) to 
 
 The updated code handles the "Failed to fetch" error in the following way:
 
-1. If the script URL contains the placeholder "YOUR_SCRIPT_ID", the code skips the network request entirely to avoid the error
-2. In case of actual network errors, the code gracefully falls back to storing data in localStorage
-3. Users receive appropriate feedback in both successful and error scenarios
-4. The form always completes its action without showing technical error messages to users
+1. The code now always attempts to send data to Google Apps Script, regardless of whether it's a placeholder URL
+2. Proper error handling ensures that network errors don't break the user experience
+3. In case of actual network errors, the code gracefully falls back to storing data in localStorage
+4. Users receive appropriate feedback in both successful and error scenarios
+5. The form always completes its action without showing technical error messages to users
 
 To ensure the form works without errors in production:
 - Replace "YOUR_SCRIPT_ID" with your actual Google Apps Script ID
@@ -59,7 +63,7 @@ To ensure the form works without errors in production:
 
 1. **Создайте Google Таблицу** с заголовками: "ID_reg", "ID_masterclass", "Имя", "Фамилия", "Почта", "Статус"
 2. **Создайте Google Apps Script** и добавьте код из файла `Code.gs`
-3. **Замените ID таблицы** в коде на ID вашей Google Таблицы (строка 14 в Code.gs)
+3. **Замените ID таблицы** в коде на ID вашей Google Таблицы (строка 33 в Code.gs)
 4. **Опубликуйте скрипт** как веб-приложение с доступом "Для всех" (кто имеет ссылку)
 5. **Замените URL** в файле `index.html` на URL вашего опубликованного скрипта, изменив `YOUR_SCRIPT_ID` на реальный ID скрипта:
 
@@ -72,4 +76,4 @@ To ensure the form works without errors in production:
    const scriptUrl = 'https://script.google.com/macros/s/abcdefghijklmnopqrstuvwxyz/exec';
    ```
 
-Подробные инструкции по развертыванию см. в файле [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md).
+Подробные инструкции по развертыванию см. в файле [DEPLOYMENT_INSTRUCTIONS.md](./DEPLOYMENT_INSTRUCTIONS.md).

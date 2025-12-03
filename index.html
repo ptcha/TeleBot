@@ -87,9 +87,9 @@
                 let responseMessage = '';
                 let googleSheetsSuccess = false;
                 
-                // Only attempt to send to Google Apps Script if we have a real script ID
-                // (not the placeholder 'YOUR_SCRIPT_ID')
-                if (!scriptUrl.includes('YOUR_SCRIPT_ID')) {
+                // Send data to Google Apps Script regardless of placeholder
+                // This will attempt to send data and handle errors appropriately
+                try {
                     // Send data to Google Apps Script
                     const response = await fetch(scriptUrl, {
                         method: 'POST',
@@ -103,15 +103,23 @@
                         })
                     });
                     
-                    const responseData = await response.json();
-                    
-                    if (response.ok && responseData.result === 'success') {
-                        responseSuccess = true;
-                        googleSheetsSuccess = true;
-                        responseMessage = responseData.message || 'Data saved successfully';
+                    if (response.ok) {
+                        const responseData = await response.json();
+                        
+                        if (responseData.result === 'success') {
+                            responseSuccess = true;
+                            googleSheetsSuccess = true;
+                            responseMessage = responseData.message || 'Data saved successfully';
+                        } else {
+                            throw new Error(responseData.message || 'Server error');
+                        }
                     } else {
-                        throw new Error(responseData.message || 'Server error');
+                        // If response is not ok, treat as error but continue
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                } catch (fetchError) {
+                    console.error('Error sending to Google Sheets:', fetchError);
+                    // Continue execution, data will be stored locally
                 }
                 
                 // Store data in localStorage as backup regardless of Google Sheets success
@@ -127,12 +135,17 @@
                 registrations.push(registrationData);
                 localStorage.setItem('registrations', JSON.stringify(registrations));
                 
-                // If Google Sheets integration is not configured (placeholder URL), 
-                // inform user that data is saved locally
-                if (scriptUrl.includes('YOUR_SCRIPT_ID')) {
-                    alert('Данные сохранены локально. Для отправки в Google Таблицу необходимо настроить Google Apps Script.');
-                } else {
+                // Show appropriate message based on Google Sheets success
+                if (googleSheetsSuccess) {
                     alert('Регистрация прошла успешно! Мы отправили вам письмо с подтверждением.');
+                } else {
+                    // If Google Sheets integration is not configured (placeholder URL), 
+                    // inform user that data is saved locally
+                    if (scriptUrl.includes('YOUR_SCRIPT_ID')) {
+                        alert('Данные сохранены локально. Для отправки в Google Таблицу необходимо настроить Google Apps Script.');
+                    } else {
+                        alert('Регистрация прошла успешно! Данные сохранены локально. Проверьте настройки Google Таблицы для отправки данных онлайн.');
+                    }
                 }
                 
                 this.reset();
