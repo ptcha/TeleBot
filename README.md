@@ -32,3 +32,17 @@ To complete the integration, you need to:
 
 ### Testing the Integration:
 Before using the registration form, use the test script (`test-script.html`) to verify that your Google Apps Script is properly configured and can successfully write data to your Google Sheet.
+
+## Avoiding "Failed to fetch" Error
+
+The updated code handles the "Failed to fetch" error in the following way:
+
+1. If the script URL contains the placeholder "YOUR_SCRIPT_ID", the code skips the network request entirely to avoid the error
+2. In case of actual network errors, the code gracefully falls back to storing data in localStorage
+3. Users receive appropriate feedback in both successful and error scenarios
+4. The form always completes its action without showing technical error messages to users
+
+To ensure the form works without errors in production:
+- Replace "YOUR_SCRIPT_ID" with your actual Google Apps Script ID
+- Ensure your Google Apps Script is properly deployed and accessible
+- Verify that your Google Sheet has the correct permissions and structure
