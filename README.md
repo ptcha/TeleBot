@@ -25,3 +25,7 @@ The registration form on the website has been updated to connect directly to a G
 To complete the integration, you need to:
 1. Create and deploy a Google Apps Script web app (see `google-apps-script-setup.md` for detailed instructions)
 2. Update the script URL in the HTML file with your deployed script ID
+3. Test the integration using the test script provided in `test-script.html`
+
+### Testing the Integration:
+Before using the registration form, use the test script (`test-script.html`) to verify that your Google Apps Script is properly configured and can successfully write data to your Google Sheet.

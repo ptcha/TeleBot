@@ -62,9 +62,15 @@
         document.getElementById('workshopRegistrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            // Validate inputs
+            if (!firstName || !lastName || !email) {
+                alert('Пожалуйста, заполните все поля формы.');
+                return;
+            }
             
             // Show loading state
             const submitButton = this.querySelector('button[type="submit"]');
@@ -87,15 +93,18 @@
                     })
                 });
                 
-                if (response.ok) {
+                const responseData = await response.json();
+                
+                if (response.ok && responseData.result === 'success') {
                     alert('Регистрация прошла успешно! Мы отправили вам письмо с подтверждением.');
                     this.reset();
                 } else {
-                    throw new Error('Ошибка при отправке данных');
+                    console.error('Server response:', responseData);
+                    throw new Error(responseData.message || 'Ошибка при отправке данных');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Произошла ошибка при отправке данных. Пожалуйста, попробуйте еще раз.');
+                console.error('Error details:', error);
+                alert('Произошла ошибка при отправке данных. Пожалуйста, попробуйте еще раз. Ошибка: ' + error.message);
             } finally {
                 // Reset button state
                 submitButton.textContent = originalText;
