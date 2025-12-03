@@ -1,29 +1,35 @@
 # TeleBot
 Telegram-bot for master-class registration
 
-## Решение проблемы "Failed to fetch"
+## Understanding the Integration Approach
 
-Проблема с ошибкой "Failed to fetch" при отправке данных формы регистрации была успешно решена. Теперь данные могут отправляться в Google Таблицу без ошибок.
+**Important**: This solution uses Google Apps Script as an intermediary to connect the registration form to Google Sheets. This is not just a workaround—it's the recommended and secure approach for connecting web forms to Google Sheets due to security restrictions in browsers and Google's API policies.
 
-Для получения полной функциональности необходимо настроить Google Apps Script, как описано ниже.
+### Why Google Apps Script is Required
+
+Direct client-side integration with Google Sheets is impossible due to:
+- **CORS restrictions**: Google Sheets API doesn't allow direct requests from arbitrary web pages
+- **Security**: OAuth 2.0 credentials cannot be safely stored in client-side code
+- **Authentication**: Google Sheets API requires server-side authentication
 
 ## Registration Form Integration
 
-The registration form on the website has been updated to connect directly to a Google Sheet instead of using Formspree.
+The registration form on the website connects to Google Sheets through a Google Apps Script web app, which is the standard and secure approach.
 
 ### Changes Made:
 - Removed Formspree form action from index.html
-- Added JavaScript to handle form submission and send data to Google Sheets
+- Added JavaScript to handle form submission and send data to Google Apps Script
 - Created a setup guide for Google Apps Script integration
 - Fixed "Failed to fetch" error when submitting data by implementing proper error handling and local fallback storage
 - Enhanced Google Apps Script code to handle both JSON and form data, with automatic sheet creation if it doesn't exist
-- Updated form submission logic to always attempt sending data to Google Apps Script, with proper error handling
+- Updated form submission logic to only attempt sending data to Google Apps Script when properly configured, with proper error handling
+- Added fallback storage in browser's localStorage when Google Apps Script is not configured
 
 ### Data Flow:
 1. User fills out the registration form (name, surname, email)
-2. JavaScript captures the form data and attempts to send it to a Google Apps Script web app
+2. JavaScript captures the form data and attempts to send it to a Google Apps Script web app (only when properly configured)
 3. If the Google Apps Script endpoint is not configured (placeholder URL), data is stored in browser's localStorage as fallback
-4. The script writes the data to the Google Sheet with the following mapping:
+4. The Google Apps Script writes the data to the Google Sheet with the following mapping:
    - Name → Column C (Имя)
    - Surname → Column D (Фамилия) 
    - Email → Column E (Почта)
@@ -38,6 +44,7 @@ To complete the integration, you need to:
 3. Test the integration using the test script provided in `test-script.html`
 4. See `PROBLEM_SOLUTION.md` for detailed information about fixing the "Failed to fetch" error
 5. For detailed deployment instructions, see `DEPLOYMENT_INSTRUCTIONS.md`
+6. For technical explanation of the approach, see `DIRECT_GOOGLE_SHEETS_INTEGRATION.md`
 
 ### Testing the Integration:
 Before using the registration form, use the test script (`test-script.html`) to verify that your Google Apps Script is properly configured and can successfully write data to your Google Sheet.
@@ -46,7 +53,7 @@ Before using the registration form, use the test script (`test-script.html`) to 
 
 The updated code handles the "Failed to fetch" error in the following way:
 
-1. The code now always attempts to send data to Google Apps Script, regardless of whether it's a placeholder URL
+1. The code now only attempts to send data to Google Apps Script when a real script ID is configured (not the placeholder)
 2. Proper error handling ensures that network errors don't break the user experience
 3. In case of actual network errors, the code gracefully falls back to storing data in localStorage
 4. Users receive appropriate feedback in both successful and error scenarios
@@ -63,7 +70,7 @@ To ensure the form works without errors in production:
 
 1. **Создайте Google Таблицу** с заголовками: "ID_reg", "ID_masterclass", "Имя", "Фамилия", "Почта", "Статус"
 2. **Создайте Google Apps Script** и добавьте код из файла `Code.gs`
-3. **Замените ID таблицы** в коде на ID вашей Google Таблицы (строка 33 в Code.gs)
+3. **Замените ID таблицы** в коде на ID вашей Google Таблицы (строка 32 в Code.gs)
 4. **Опубликуйте скрипт** как веб-приложение с доступом "Для всех" (кто имеет ссылку)
 5. **Замените URL** в файле `index.html` на URL вашего опубликованного скрипта, изменив `YOUR_SCRIPT_ID` на реальный ID скрипта:
 
