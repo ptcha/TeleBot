@@ -1,1 +1,1 @@
-Nothing should be ignored based on the provided file changes, as they consist only of documentation and source files (.md, .html).
+Nothing should be ignored based on the provided file changes, as they only include source/config files (.md, .gs, .html) and no build artifacts, dependencies, or temporary files.

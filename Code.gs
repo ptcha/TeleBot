@@ -1,19 +1,52 @@
 function doPost(e) {
   try {
-    // Parse the incoming data
-    const jsonString = e.postData.contents;
-    const data = JSON.parse(jsonString);
+    // Handle both JSON and form data
+    let data;
+    
+    if (e.parameter && Object.keys(e.parameter).length > 0) {
+      // Form data received
+      data = {
+        firstName: e.parameter.firstName || '',
+        lastName: e.parameter.lastName || '',
+        email: e.parameter.email || ''
+      };
+    } else if (e.postData) {
+      // JSON data received
+      const jsonString = e.postData.contents;
+      data = JSON.parse(jsonString);
+    }
     
     // Extract the form data
     const firstName = data.firstName || '';
     const lastName = data.lastName || '';
     const email = data.email || '';
     
+    // Validate required fields
+    if (!firstName || !lastName || !email) {
+      return ContentService
+        .createTextOutput(JSON.stringify({result: 'error', message: 'Missing required fields'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // Open the Google Sheet
     // Replace with your actual spreadsheet ID
     const sheetId = '1KI4xQPFpKKG5jloqyCArMNH0a5BgrgNZR_Q-3qbcOHE';
     const ss = SpreadsheetApp.openById(sheetId);
     const sheet = ss.getSheetByName('Данные регистрации');
+    
+    // Check if sheet exists, create if it doesn't
+    if (!sheet) {
+      const newSheet = ss.insertSheet('Данные регистрации');
+      // Add headers to the new sheet
+      newSheet.getRange(1, 1, 1, 6).setValues([['ID_reg', 'ID_masterclass', 'Имя', 'Фамилия', 'Почта', 'Статус']]);
+      sheet = newSheet;
+    }
+    
+    // Check if headers exist, add if they don't
+    const headerRow = sheet.getRange(1, 1, 1, 6).getValues()[0];
+    if (headerRow[0] !== 'ID_reg') {
+      sheet.getRange(1, 1, 1, 6).setValues([['ID_reg', 'ID_masterclass', 'Имя', 'Фамилия', 'Почта', 'Статус']]);
+    }
     
     // Generate a unique registration ID
     const registrationId = 'REG-' + new Date().getTime();
